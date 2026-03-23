@@ -1,71 +1,66 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>Cart</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+{% extends 'base.html' %}
 
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-</head>
-<body>
+{% block title %}Cart{% endblock %}
 
-<div class="container my-5">
-  <h2 class="text-center mb-4">🛒 Your Cart</h2>
+{% block content %}
 
-  {% if cart %}
-    <div class="table-responsive">
-      <table class="table table-bordered align-middle text-center">
-        <thead class="table-dark">
-          <tr>
-            <th>Image</th>
-            <th>Product</th>
-            <th>Price</th>
-            <th>Qty</th>
-            <th>Subtotal</th>
-            <th>Action</th>
-          </tr>
-        </thead>
+<h2 class="text-center mb-4">🛒 Your Cart</h2>
 
-        <tbody>
-          {% for key, item in cart.items %}
-          <tr>
-            <td>
-              <img src="{{ item.image }}" width="80" class="rounded">
-            </td>
-            <td>{{ item.name }}</td>
-            <td>₹ {{ item.price }}</td>
-            <td>
-  <a href="{% url 'update_cart' key 'decrease' %}" class="btn btn-sm btn-outline-secondary">−</a>
-  <span class="mx-2">{{ item.quantity }}</span>
-  <a href="{% url 'update_cart' key 'increase' %}" class="btn btn-sm btn-outline-secondary">+</a>
-</td>
+{% if cart %}
+  <div class="table-responsive">
+    <table class="table table-bordered align-middle text-center">
+      <thead class="table-dark">
+        <tr>
+          <th>Image</th>
+          <th>Product</th>
+          <th>Price</th>
+          <th>Qty</th>
+          <th>Subtotal</th>
+          <th>Action</th>
+        </tr>
+      </thead>
 
-            <td>₹ {{ item.price|floatformat:2 }}</td>
-            <td>
-              <a href="{% url 'remove_from_cart' key %}" class="btn btn-danger btn-sm">
-                Remove
-              </a>
-            </td>
-          </tr>
-          {% endfor %}
-        </tbody>
-      </table>
-    </div>
+      <tbody>
+        {% for key, item in cart.items %}
+        <tr>
+          <td>
+            <img src="{{ item.image }}" width="80" class="rounded">
+          </td>
+          <td>{{ item.name }}</td>
+          <td>₹ {{ item.price }}</td>
 
-    <div class="text-end mt-3">
-      <h4>Total: <span class="text-success">₹ {{ total }}</span></h4>
-      <a href="{% url 'checkout' %}" class="btn btn-success btn-lg mt-2">Proceed to Checkout</a>
-    </div>
+          <td>
+            <a href="{% url 'update_cart' key 'decrease' %}" class="btn btn-sm btn-outline-secondary">−</a>
+            <span class="mx-2">{{ item.quantity }}</span>
+            <a href="{% url 'update_cart' key 'increase' %}" class="btn btn-sm btn-outline-secondary">+</a>
+          </td>
 
-  {% else %}
-    <p class="text-center fs-5">Your cart is empty.</p>
-    <div class="text-center">
-      <a href="{% url 'home' %}" class="btn btn-primary">Continue Shopping</a>
-    </div>
-  {% endif %}
+          <!-- FIXED subtotal -->
+          <td>₹ {{ item.price|floatformat:2|add:"0"|floatformat:2 }}</td>
 
-</div>
+          <td>
+            <a href="{% url 'remove_from_cart' key %}" class="btn btn-danger btn-sm">
+              Remove
+            </a>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-</body>
-</html>
+  <div class="text-end mt-3">
+    <h4>Total: <span class="text-success">₹ {{ total }}</span></h4>
+    <a href="{% url 'checkout' %}" class="btn btn-success btn-lg mt-2">
+      Proceed to Checkout
+    </a>
+  </div>
+
+{% else %}
+  <p class="text-center fs-5">Your cart is empty.</p>
+  <div class="text-center">
+    <a href="{% url 'home' %}" class="btn btn-primary">Continue Shopping</a>
+  </div>
+{% endif %}
+
+{% endblock %}
