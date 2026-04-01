@@ -62,6 +62,9 @@ def remove_from_cart(request, product_id):
     request.session['cart'] = cart
     return redirect('cart')
 
+import razorpay
+from django.conf import settings
+
 def checkout(request):
     cart = request.session.get('cart', {})
     total = sum(item['price'] * item['quantity'] for item in cart.values())
@@ -71,16 +74,66 @@ def checkout(request):
             messages.warning(request, "Your cart is empty!")
             return redirect('checkout')
 
-        Order.objects.create(
+        order = Order.objects.create(
             name=request.POST.get('name'),
             address=request.POST.get('address'),
-            total_amount=total
+            total_amount=total,
+            is_paid=False
         )
 
-        request.session['cart'] = {}
-        messages.success(request, "Order placed successfully!")
-
-        return redirect('home')   # Redirect after order
+        # DO NOT clear cart yet
+        return redirect('payment', order_id=order.id)
 
     return render(request, 'checkout.html', {'total': total})
 
+client = razorpay.Client(auth=(settings.RAZORPAY_KEY_ID, settings.RAZORPAY_KEY_SECRET))
+
+def payment_page(request, order_id):
+    order = get_object_or_404(Order, id=order_id)
+
+    razorpay_order = client.order.create({
+        "amount": int(order.total_amount * 100),
+        "currency": "INR",
+        "payment_capture": 1
+    })
+
+    order.razorpay_order_id = razorpay_order['id']
+    order.save()
+
+    return render(request, 'payment.html', {
+        'order': order,
+        'razorpay_key': settings.RAZORPAY_KEY_ID,
+        'amount': int(order.total_amount * 100),
+        'razorpay_order_id': razorpay_order['id']
+    })
+
+from django.views.decorators.csrf import csrf_exempt
+from django.http import HttpResponse
+
+@csrf_exempt
+def payment_success(request):
+    payment_id = request.GET.get('payment_id')
+    order_id = request.GET.get('order_id')
+    signature = request.GET.get('signature')
+
+    params_dict = {
+        'razorpay_order_id': order_id,
+        'razorpay_payment_id': payment_id,
+        'razorpay_signature': signature
+    }
+
+    try:
+        client.utility.verify_payment_signature(params_dict)
+
+        order = Order.objects.get(razorpay_order_id=order_id)
+        order.is_paid = True
+        order.razorpay_payment_id = payment_id
+        order.save()
+
+        # NOW clear cart
+        request.session['cart'] = {}
+
+        return HttpResponse("Payment Successful ✅")
+
+    except:
+        return HttpResponse("Payment Failed ❌")

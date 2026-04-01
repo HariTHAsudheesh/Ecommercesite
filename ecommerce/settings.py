@@ -71,7 +71,8 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'ecommerce.wsgi.application'
 
-
+RAZORPAY_KEY_ID ="rzp_test_SYBqMOKY5blwNA"
+RAZORPAY_KEY_SECRET ="3PVCMQzItQpxejAH3Y8enT54"
 # Database
 # https://docs.djangoproject.com/en/6.0/ref/settings/#databases
 
